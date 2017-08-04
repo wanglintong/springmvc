@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:jee="http://www.springframework.org/schema/jee"
+	xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+		http://www.springframework.org/schema/data/jpa http://www.springframework.org/schema/data/jpa/spring-jpa.xsd
+		http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd">
+	
+	<context:property-placeholder location="classpath:db.properties" />
+	<context:spring-configured />
+	<!-- 自动扫Controller -->
+	<context:component-scan base-package="cn.com.zlqf">
+		<context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+		<context:exclude-filter type="annotation" expression="org.springframework.web.bind.annotation.ControllerAdvice"/>
+	</context:component-scan>
+	
+	<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+		<property name="entityManagerFactory" ref="entityManagerFactory" />
+	</bean>
+	<tx:annotation-driven transaction-manager="transactionManager" />
+	
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
+		<property name="driverClass" value="${jdbc.driver}" />
+		<property name="jdbcUrl" value="${jdbc.url}" />
+		<property name="user" value="${jdbc.user}" />
+		<property name="password" value="${jdbc.password}" />
+	</bean>
+	
+	<bean id="hibernateJpaVendorAdapter" class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter"/>
+	<bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+		<!-- 指定数据源 -->
+		<property name="dataSource" ref="dataSource" />
+		<!-- 指定Jpa持久化实现厂商类,这里以Hibernate为例 -->
+		<property name="jpaVendorAdapter" ref="hibernateJpaVendorAdapter" />
+		<!-- 指定Entity实体类包路径 -->
+		<property name="packagesToScan">
+			<list>
+				<value>cn.com.zlqf.*.entity</value>
+			</list>
+		</property>
+		<!-- 指定JPA属性；如Hibernate中指定是否显示SQL的是否显示、方言等 -->
+		<property name="jpaProperties">
+			<props>
+				<prop key="hibernate.dialect">org.hibernate.dialect.PostgreSQLDialect</prop>
+				<prop key="hibernate.ejb.naming_strategy">org.hibernate.cfg.ImprovedNamingStrategy</prop>
+				<prop key="hibernate.connection.charSet">UTF-8</prop>
+				<prop key="hibernate.show_sql">true</prop>
+				<prop key="hibernate.format_sql">false</prop>
+				<prop key="hibernate.hbm2ddl.auto">update</prop>
+			</props>
+		</property>
+	</bean>
+	<!-- 配置 SpringData -->
+	<jpa:repositories base-package="cn.com.zlqf.*" entity-manager-factory-ref="entityManagerFactory">
+	</jpa:repositories>
+</beans>
